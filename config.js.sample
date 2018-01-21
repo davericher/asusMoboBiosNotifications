@@ -1,0 +1,19 @@
+module.exports = {
+  broker: {
+    "host": "",
+    "username": "",
+    "password": ""
+  },
+  mobos: [
+    {
+      name: 'x99 Deluxe II',
+      apiEndPoint: 'https://www.asus.com/support/api/product.asmx/GetPDBIOS?website=ca-en&pdhashedid=f3t1UbKe9B61bqmk&model=X99-DELUXE%20II',
+      currentVersion: 1802,
+    },
+    {
+      name: 'z170 Deluxe',
+      apiEndPoint: 'https://www.asus.com/support/api/product.asmx/GetPDBIOS?website=ca-en&pdhashedid=x2NF8IZy4dM3NgLH&model=Z170-DELUXE',
+      currentVersion: 3504,
+    }
+  ]
+};

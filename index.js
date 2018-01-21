@@ -56,7 +56,7 @@ const invalidApiState = (biosResults) => biosResults.Status !== 'SUCCESS' ||
   !biosResults.Result.Obj[0].Files[0].DownloadUrl ||
   !biosResults.Result.Obj[0].Files[0].DownloadUrl.Global;
 
-const newBiosMqttAlert = async (mobo, lastBios) => mqttClient.publish('newBiosAlert', `A New Bios is available for ${mobo.name} // ${lastBios.Version} // ${lastBios.Title} // ${lastBios.Description}`);
+const newBiosMqttAlert = async (mobo, lastBios) => mqttClient.publish('newBiosAlert', `A New Bios is available for ${mobo.name} // ${lastBios.Version} // ${lastBios.Title} // ${strip(lastBios.Description).replace(/  +/g, ' ')}`);
 
 // Application Entry Point
 const app = async (mobos) => {
