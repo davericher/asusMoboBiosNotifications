@@ -1,6 +1,7 @@
 const c = require('chalk');
 const fs = require('fs');
 const rp = require('request-promise-native');
+const url = require('url');
 const strip = require('striptags');
 
 // Formatter
@@ -46,7 +47,12 @@ const asusMoboUpdater = async (config, mqttClient) => {
     }
 
     // Get a Download file path
-    const getFilePath = (mobo, lastBios) => `${config.downloadPath}/${mobo.name}-${lastBios.Version}.zip`;
+    const getFilePath = (mobo, lastBios) => {
+//        `${config.downloadPath}/${mobo.name}-${lastBios.Version}.zip`
+        const fileUrl = url.parse(lastBios.DownloadUrl.Global);
+        const fileResults  = fileUrl.pathname.split('/');
+        return `${config.downloadPath}/${fileResults[fileResults.length - 1]}`;
+    };
 
     // Alert of New Bios
     const newBiosConsoleAlert = (mobo, lastBios) => {
@@ -60,22 +66,20 @@ const asusMoboUpdater = async (config, mqttClient) => {
         descToObject(lastBios.Description).forEach(note => console.log(c.yellow(`- ${note}`)));
 
         if (downloadExists(mobo, lastBios)) {
-            f('Downloaded', getFilePath(mobo, lastBios));
+            f('Downloaded', lastBios.filePath);
         }
     };
 
     // Download file Exists
     const downloadExists = (mobo, lastBios) => {
-        const filePath = getFilePath(mobo, lastBios);
-        return fs.existsSync(filePath);
+        return fs.existsSync(lastBios.filePath);
     };
 
     // Download New Bioses
     const newBiosDownloadCheck = async (mobo, lastBios) => {
         // If the File does not already exist
         if (!downloadExists(mobo, lastBios)) {
-            const filePath = getFilePath(mobo, lastBios);
-            console.log(`Downloading ${filePath} (${lastBios.FileSize})`);
+            console.log(`Downloading ${lastBios.filePath} (${lastBios.FileSize})`);
 
             // Grab The File
             const fileRes = await rp.get({
@@ -83,7 +87,7 @@ const asusMoboUpdater = async (config, mqttClient) => {
                 encoding: null,
             });
 
-            fs.writeFileSync(filePath, Buffer.from(fileRes, 'utf8'));
+            fs.writeFileSync(lastBios.filePath, Buffer.from(fileRes, 'utf8'));
             console.log('Downloaded');
             return;
         }
@@ -95,7 +99,12 @@ const asusMoboUpdater = async (config, mqttClient) => {
     const newBiosMqttAlert = async (mobo, lastBios) =>
         mqttClient.publish(
             config.mqttTitle,
-            `A New Bios is available for ${mobo.name} // ${lastBios.Version} // ${lastBios.Title} // ${strip(lastBios.Description).replace(/  +/g, ' ')}`
+            JSON.stringify({
+                mobo,
+                lastBios: Object.assign({}, lastBios, {
+                    description: strip(lastBios.Description).replace(/  +/g, ' ')
+                })
+            }),
         );
 
     // Iterate over the mobos
@@ -116,7 +125,9 @@ const asusMoboUpdater = async (config, mqttClient) => {
             continue;
         }
         // Hold on to the last BIOS
-        const lastBios = biosResults.Result.Obj[0].Files[0];
+        const lastBios = Object.assign({}, biosResults.Result.Obj[0].Files[0], {
+            filePath: getFilePath(mobo, biosResults.Result.Obj[0].Files[0])
+        });
         // BIOS is up to date
         if (mobo.currentVersion >= parseInt(lastBios.Version, 10)) {
             console.log(c.green(`Your current BIOS for ${mobo.name} ${mobo.currentVersion}, is up to date`));
