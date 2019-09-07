@@ -9,10 +9,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "chalk": "^2.3.0",
-    "mqtt": "^2.15.1",
-    "request": "^2.83.0",
-    "request-promise-native": "^1.0.5",
+    "chalk": "^2.4.2",
+    "mqtt": "^3.0.0",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.7",
     "striptags": "^3.1.1"
   }
 }
